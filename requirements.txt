@@ -1,0 +1,10 @@
+google-cloud-storage==1.41.0
+scipy==1.7.1
+Numpy==1.21.4
+Numba==0.53.0
+torch==1.7.1
+resampy==0.2.2
+panphon==0.19
+editdistance==0.3.1
+
+
