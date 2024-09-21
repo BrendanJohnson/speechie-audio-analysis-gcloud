@@ -6,5 +6,6 @@ torch==1.7.1
 resampy==0.2.2
 panphon==0.19
 editdistance==0.3.1
+ffmpeg-normalize==1.27.3
 
 

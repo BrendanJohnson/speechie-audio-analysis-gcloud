@@ -1,23 +1,20 @@
 import functions_framework
-from transcription import transcribe
-from storage import get_item_from_folder
+from storage import get_item_from_folder, write_to_bucket
 import shutil
-from subprocess import Popen
+from subprocess import PIPE, Popen
 import os
 from flask import make_response, jsonify
 
 def get_data_from_request(request):
 	return request['id'], request['file']
 
-def recognizer():
+def recognizer(input_path):
 	try:
-		cmd = f'''python3 recognize.py'''
-		p = Popen(cmd.split())
-		stdout, stderr = p.communicate()
-		p_status = p.wait()
-		print('finished recognize: ')
-		print(stdout)
-		return stdout
+		cmd = f'''python3 recognize.py {input_path}'''
+		with Popen(cmd, stdout=PIPE, stderr=None, shell=True) as process:
+			output = process.communicate()[0].decode("utf-8")
+			print(output)
+			return output
 	except Exception as e:
 		print(e)
 
@@ -42,7 +39,7 @@ def main(request):
 	audio_id = 'None'
 	file_name = 'None'
 	input_file = None
-	transcoded_file = f'out.wav'
+	transcoded_file = f'/tmp/out.wav'
 
 	if request_json and 'id' in request_json:
 		audio_id, file_name = get_data_from_request(request_json)
@@ -58,17 +55,19 @@ def main(request):
 			input_file = None
 	else: # Read file from cloud bucket
 		print('reading from cloud')
-		input_file = None
-		# input_file = storage.get_item_from_folder(audio_id, file_name)
+		input_file = get_item_from_folder(audio_id, file_name)
 
 	if not input_file:
 		return make_response(jsonify({ "audioId": audio_id, "filename": file_name, "error": "Audio could not be found error" }), 400)
 	
 	if transcoder(input_file, transcoded_file):
 		print('time to recognize: ' + transcoded_file)
-		transcript = recognizer()
-		# transcript = recognize_audio(transcoded_file)
-		# print(transcript)
+		transcript = recognizer(transcoded_file)
+		print('transcribed')
+		print(transcript)
+		
+		write_to_bucket(audio_id, file_name, transcript)
+		print('written to bucket')	
 		return make_response(jsonify({ "audioId": audio_id, "filename": file_name, "transcript": transcript }), 200)
 
 	return str(input_file)

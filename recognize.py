@@ -1,5 +1,6 @@
 from allosaurus import app
 from argparse import Namespace
+import sys
 # for /REC006_三: 210802_yue_split1_2 > 210809_yue_18_cleanchild
 # for /130616_012_三: TOO NOISY
 # for /130616_010_三: 210802_yue_split1_2 > 210809_yue_18_cleanchild
@@ -14,5 +15,5 @@ def recognize_audio(path):
 	return transcript
 
 if __name__ == "__main__":
-	transcript = recognize_audio('out.wav')
+	transcript = recognize_audio(sys.argv[1])
 	print(transcript)
